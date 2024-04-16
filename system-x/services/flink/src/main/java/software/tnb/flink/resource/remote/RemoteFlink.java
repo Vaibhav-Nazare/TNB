@@ -1,7 +1,7 @@
 package software.tnb.flink.resource.remote;
 
 import software.tnb.common.deployment.RemoteService;
-import software.tnb.flink.Flink;
+import software.tnb.flink.service.Flink;
 
 import com.google.auto.service.AutoService;
 
