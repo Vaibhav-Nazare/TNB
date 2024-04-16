@@ -11,4 +11,9 @@ public class RemoteFlink extends Flink implements RemoteService {
     public String host() {
         return RemoteService.super.host();
     }
+
+    @Override
+    public int port() {
+        return PORT;
+    }
 }
