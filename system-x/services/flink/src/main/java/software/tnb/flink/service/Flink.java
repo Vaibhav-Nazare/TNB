@@ -20,4 +20,16 @@ public abstract class Flink extends Service<NoAccount, NoClient, NoValidation> i
     public int port() {
         return PORT;
     }
+
+    public void deploy() {
+    }
+
+    public void undeploy() {
+    }
+
+    public void openResources() {
+    }
+
+    public void closeResources() {
+    }
 }
