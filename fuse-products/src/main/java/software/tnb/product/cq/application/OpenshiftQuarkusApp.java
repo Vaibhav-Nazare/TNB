@@ -28,9 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import cz.xtf.core.openshift.helpers.ResourceFunctions;
 import io.fabric8.kubernetes.api.model.IntOrString;
@@ -48,8 +46,11 @@ public class OpenshiftQuarkusApp extends QuarkusApp {
         Optional<Customizer> restCustomizer = integrationBuilder.getCustomizers().stream().filter(c -> c instanceof RestCustomizer).findFirst();
         // For openshift quarkus app, the HTTP request will return default openshift 503 when the endpoint is not ready
         restCustomizer.ifPresent(customizer ->
-            readinessCheck = () -> HTTPUtils.getInstance().get(getEndpoint() + ((RestCustomizer) customizer).getReadinessCheckPath())
-                .getResponseCode() != 503);
+            readinessCheck = () -> {
+                final HTTPUtils.Response response =
+                    HTTPUtils.getInstance().get(getEndpoint() + ((RestCustomizer) customizer).getReadinessCheckPath(), false);
+                return response.getResponseCode() != 503 && response.getResponseCode() != 0;
+            });
     }
 
     @Override
@@ -137,13 +138,7 @@ public class OpenshiftQuarkusApp extends QuarkusApp {
     private String getJavaCommand() {
         final String defaultCmd = "java %s -Dquarkus.http.host=0.0.0.0 -Djava.util.logging.manager=org.jboss.logmanager.LogManager "
             + "-jar /deployments/quarkus-run.jar";
-        Properties properties = integrationBuilder.getProperties();
-        // getJavaCommand is not called in case of native and this property could cause problems when there is more than 1 native resource to include
-        // as it would split the java command
-        // see issue #614
-        properties.remove("quarkus.native.resources.includes");
-        return String.join(",", String.format(defaultCmd, properties.entrySet().stream().map(e -> "-D" + e.getKey() + "=" + e.getValue())
-            .collect(Collectors.joining(" "))).split(" "));
+        return String.join(",", String.format(defaultCmd, String.join(" ", systemProperties())).split(" "));
     }
 
     @Override
